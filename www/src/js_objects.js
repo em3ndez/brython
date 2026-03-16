@@ -283,7 +283,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return jsobj
     }
     */
-    
+
     if(jsobj.constructor === Generator.constructor){
         return JSGenerator.$factory(jsobj)
     }
@@ -330,7 +330,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     if(has_type(klass, _b_.list) || has_type(klass, _b_.tuple)){
         // Python list : transform its elements
         var jsobj = pyobj.map(pyobj2jsobj)
-        //jsobj[PYOBJ] = pyobj
+        jsobj[PYOBJ] = pyobj
         delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
@@ -767,14 +767,11 @@ $B.JSObj.tp_setattro = function(self, attr, value){
 
 $B.JSObj.mp_subscript = function(_self, key){
     if(typeof key == "string"){
-        try{
-            return $B.$getattr(_self, key)
-        }catch(err){
-            if($B.is_exc(err, [_b_.AttributeError])){
-                $B.RAISE(_b_.KeyError, err.name)
-            }
-            throw err
+        var res = $B.JSObj.tp_getattro(_self, key)
+        if(res === $B.NULL){
+            $B.RAISE(_b_.KeyError, key)
         }
+        return res
     }else if(typeof key == "number"){
         if(_self[key] !== undefined){
             return jsobj2pyobj(_self[key])

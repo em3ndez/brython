@@ -100,7 +100,7 @@ $B.builtin_object_getattro = function(self, klass, attr){
 
 $B.object_getattribute = function(obj, klass, attr){
     var t0 = globalThis.performance.now()
-    var test = false // attr == 'zd' // && klass.tp_name === 'AttributeError'
+    var test = false // attr == 'append' // && klass.tp_name === 'AttributeError'
     if(test){
         console.log('klass', klass, 'attr', attr)
     }

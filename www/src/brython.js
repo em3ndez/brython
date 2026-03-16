@@ -670,8 +670,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-16 09:20:03.409272"
-__BRYTHON__.timestamp=1773649203408
+__BRYTHON__.compiled_date="2026-03-16 21:38:30.782068"
+__BRYTHON__.timestamp=1773693510781
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -10595,6 +10595,8 @@ self._values.push(value)
 self.$version++
 return _b_.None}
 dict.$getitem=function(self,key,ignore_missing){
+if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return self[$B.JSOBJ][key]}
+$B.RAISE(_b_.KeyError,key)}
 if(self.$all_str){if(typeof key=='string'){if(self.$strings.hasOwnProperty(key)){return self.$strings[key]}}else{var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get(_b_.object.dict,'__hash__')){convert_all_str(self)
 let lookup=dict.$lookup_by_key(self,key)
@@ -11285,7 +11287,7 @@ list_funcs.__reversed__=function(self){return{
 ob_type:$B.list_reverseiterator,counter:self.length-1,items:self}}
 list_funcs.__sizeof__=function(self){}
 list_funcs.append=function(self,x){$B.check_nb_args_no_kw("append",2,arguments)
-if(self[$B.PYOBJ]){self[$B.PYOBJ].push(x)
+if(self[$B.JSOBJ]){self[$B.JSOBJ].push($B.pyobj2jsobj(x))
 self.push($B.pyobj2jsobj(x))}else if(self.$is_js_array){self.push($B.pyobj2jsobj(x))}else{self[self.length]=x}
 return _b_.None}
 list_funcs.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
@@ -11515,6 +11517,7 @@ function has_type(cls,base){return cls===base ||$B.get_mro(cls).includes(base)}
 if(has_type(klass,$B.DOMNode)){return pyobj}
 if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
 var jsobj=pyobj.map(pyobj2jsobj)
+jsobj[PYOBJ]=pyobj
 delete jsobj.ob_type 
 return jsobj}
 if(has_type(klass,_b_.dict)){
@@ -11677,8 +11680,9 @@ $B.JSObj.tp_setattro=function(self,attr,value){if(value===$B.NULL){delete self[a
 return}
 self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
-$B.JSObj.mp_subscript=function(_self,key){if(typeof key=="string"){try{return $B.$getattr(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.KeyError,err.name)}
-throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return jsobj2pyobj(_self[key])}
+$B.JSObj.mp_subscript=function(_self,key){if(typeof key=="string"){var res=$B.JSObj.tp_getattro(_self,key)
+if(res===$B.NULL){$B.RAISE(_b_.KeyError,key)}
+return res}else if(typeof key=="number"){if(_self[key]!==undefined){return jsobj2pyobj(_self[key])}
 if(typeof _self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
 typeof _self.item=='function'){var rank=$B.int_value(key)
 if(rank < 0){rank+=_self.length}

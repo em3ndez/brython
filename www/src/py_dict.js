@@ -652,6 +652,12 @@ dict.$setitem_string = function(self, key, value){
 
 dict.$getitem = function(self, key, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
+    if(Object.hasOwn(self, $B.JSOBJ)){
+        if(Object.hasOwn(self[$B.JSOBJ], key)){
+            return self[$B.JSOBJ][key]
+        }
+        $B.RAISE(_b_.KeyError, key)
+    }
     if(self.$all_str){
         if(typeof key == 'string'){
             if(self.$strings.hasOwnProperty(key)){

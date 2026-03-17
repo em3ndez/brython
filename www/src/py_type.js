@@ -100,7 +100,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     }
     kls.tp_subclasses = []
 
-    $B.make_getattr(kls)
+    if(kls.$getattribute === undefined){
+        $B.make_getattr(kls)
+    }
 
     //$B.make_annotate_class(kls, annotate, frame)
 

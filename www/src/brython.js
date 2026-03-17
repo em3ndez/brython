@@ -212,6 +212,7 @@ return res}}
 $B.method_to_op={}
 for(var category in $B.op2method){for(var op in $B.op2method[category]){var method=`__${$B.op2method[category][op]}__`
 $B.method_to_op[method]=op}}
+$B.FAST_ITER=Symbol('FAST_ITER')
 $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r",92:"\\\\",160:"\\xa0"}
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=Math.floor(Math.random()*2**50)
@@ -670,8 +671,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-16 21:38:30.782068"
-__BRYTHON__.timestamp=1773693510781
+__BRYTHON__.compiled_date="2026-03-17 09:31:36.227121"
+__BRYTHON__.timestamp=1773736296226
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1677,23 +1678,16 @@ var keys=$B.$call($B.$getattr(klass,'keys'),obj)
 for(var key of $B.make_js_iterator(keys)){if(! $B.$isinstance(key,_b_.str)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
 items.push({key,value:$B.$call(getitem,obj,key)})}
 return items}
+$B.make_js_iterator_no_trace=function(iterator){if(Array.isArray(iterator)){if(iterator.ob_type){return iterator[Symbol.iterator]()}else{return iterator.map($B.jsobj2pyobj)[Symbol.iterator]()}}
+return $B.make_js_iterator(iterator,$B.NULL)}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
 if(frame===undefined){if(! $B.frame_obj){set_lineno=function(){}}else{frame=$B.frame_obj.frame
-lineno=frame.$lineno}}
-if(iterator.ob_type===_b_.range){var obj={ix:iterator.start}
-if(iterator.step > 0){return{
-[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
-if(obj.ix >=iterator.stop){return{done:true,value:null}}
-var value=obj.ix
-obj.ix+=iterator.step
-return{done:false,value}}}}else{return{
-[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
-if(obj.ix <=iterator.stop){return{done:true,value:null}}
-var value=obj.ix
-obj.ix+=iterator.step
-return{done:false,value}}}}}
-var it=_b_.iter(iterator)
+lineno=frame.$lineno}}else if(frame===$B.NULL){
+set_lineno=()=> null}
+var cls=$B.get_class(iterator)
+if(Object.hasOwn(cls,$B.FAST_ITER)){return cls[$B.FAST_ITER](iterator,set_lineno,frame,lineno)}
+var it=$B.$iter(iterator)
 var test=false 
 if(test){console.log('make js iterator',it)}
 var next_func=$B.$getattr($B.get_class(it),'__next__',null)
@@ -1731,9 +1725,11 @@ var res=t.slice(t.index,t.length-nb_after_starred)
 t.index=t.length-nb_after_starred-1
 return $B.$list(res)}
 return t}
+$B.nb_set_lineno_type=0
 $B.set_lineno=function(frame,lineno,type){frame.$lineno=lineno
 if(frame.$f_trace !==_b_.None){$B.trace_line()}
-if(type){frame[type]=frame[type]||{}
+if(type){$B.nb_set_lineno_type++
+frame[type]=frame[type]||{}
 frame[type][lineno]=true}
 return true}
 $B.get_method_class=function(method,ns,qualname,refs){
@@ -2477,7 +2473,7 @@ var kls
 try{if(meta_new.$is_slot){try{kls=meta_new(metaclass,[class_name,resolved_bases,dict],$B.obj_dict(extra_kwargs))}catch(err){throw err}}else{kls=$B.$call(meta_new,metaclass,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}}catch(err){if(test){console.log('error in meta_new',meta_new,extra_kwargs)}
 throw err}
 kls.tp_subclasses=[]
-$B.make_getattr(kls)
+if(kls.$getattribute===undefined){$B.make_getattr(kls)}
 if($B.get_class(kls)===metaclass){
 var meta_init=_b_.type.tp_getattro(metaclass,"__init__")
 try{$B.$call(meta_init,kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}catch(err){if(class_name=='SupportsInt'){console.log('err for',class_name)
@@ -4939,6 +4935,7 @@ map_funcs.__reduce__=function(self){}
 map_funcs.__setstate__=function(self){}
 _b_.map.tp_methods=["__reduce__","__setstate__"]
 $B.set_func_names(map,"builtins")
+$B.nb_min=0
 function $extreme(args,op){
 var $op_name=op=='__lt__' ? 'min' :'max'
 var last=args[args.length-1]
@@ -4959,12 +4956,13 @@ $B.RAISE(_b_.TypeError,"'"+item.key+
 "' is an invalid keyword argument for this function")}}}
 if((! func)||func===_b_.None){func=null}
 if(nb_args==0){$B.RAISE(_b_.TypeError,$op_name+" expected 1 arguments, got 0")}else if(nb_args==1){
-var $iter=$B.make_js_iterator(args[0]),res=null,x_value,extr_value
+var $iter=$B.make_js_iterator_no_trace(args[0]),res=null,x_value,extr_value
 for(var x of $iter){if(res===null){extr_value=func===null ? x :$B.$call(func,x)
 res=x}else{x_value=func===null ? x :$B.$call(func,x)
 if($B.rich_comp(op,x_value,extr_value)){res=x
 extr_value=x_value}}}
-if(res===null){if(has_default){return default_value}else{$B.RAISE(_b_.ValueError,$op_name+
+if(res===null){if(has_default){$B.nb_min++
+return default_value}else{$B.RAISE(_b_.ValueError,$op_name+
 "() arg is an empty sequence")}}else{return res}}else{if(has_default){$B.RAISE(_b_.TypeError,"Cannot specify a default for "+
 $op_name+"() with multiple positional arguments")}
 var res=null,x,x_value,extr_value
@@ -6310,6 +6308,18 @@ throw err}})(__BRYTHON__);
 (function($B){var _b_=$B.builtins,None=_b_.None,range=_b_.range
 range.$match_sequence_pattern=true 
 range.$is_sequence=true
+_b_.range[$B.FAST_ITER]=function(self,set_lineno,frame,lineno){var obj={ix:self.start}
+if(self.step > 0){return{
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
+if(obj.ix >=self.stop){return{done:true,value:null}}
+var value=obj.ix
+obj.ix+=self.step
+return{done:false,value}}}}else{return{
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
+if(obj.ix <=self.stop){return{done:true,value:null}}
+var value=obj.ix
+obj.ix+=self.step
+return{done:false,value}}}}}
 function range_eq(self,other){if($B.$isinstance(other,range)){var len=range.mp_length(self)
 if(! $B.rich_comp('__eq__',len,range.mp_length(other))){return false}
 if(len==0){return true}
@@ -11017,6 +11027,13 @@ return d}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,isinstance=$B.$isinstance
 function check_not_tuple(self,attr){if($B.exact_type(self,tuple)){throw $B.attr_error(attr,self)}}
+_b_.list[$B.FAST_ITER]=_b_.tuple[$B.FAST_ITER]=function(t,set_lineno,frame,lineno){var obj={ix:-1,stop:t.length}
+return{
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
+obj.ix++
+if(obj.ix >=obj.stop){return{done:true,value:null}}
+var value=t[obj.ix]
+return{done:false,value}}}}
 function count(self){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
 var res=0
 for(var _item of $.self){if($B.is_or_equals(_item,$.x)){res++}}

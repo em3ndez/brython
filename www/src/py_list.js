@@ -10,6 +10,24 @@ function check_not_tuple(self, attr){
     }
 }
 
+_b_.list[$B.FAST_ITER] = _b_.tuple[$B.FAST_ITER] = function(t, set_lineno, frame, lineno){
+    var obj = {ix: -1, stop: t.length}
+    return {
+        [Symbol.iterator](){
+            return this
+        },
+        next(){
+            set_lineno(frame, lineno)
+            obj.ix++
+            if(obj.ix >= obj.stop){
+                return {done: true, value: null}
+            }
+            var value = t[obj.ix]
+            return {done: false, value}
+        }
+    }
+}
+
 function count(self){
     var $ = $B.args("count", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)

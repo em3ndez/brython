@@ -8,6 +8,41 @@ var _b_ = $B.builtins,
 range.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 range.$is_sequence = true
 
+_b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno){
+    var obj = {ix: self.start}
+    if(self.step > 0){
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                set_lineno(frame, lineno)
+                if(obj.ix >= self.stop){
+                    return {done: true, value: null}
+                }
+                var value = obj.ix
+                obj.ix += self.step
+                return {done: false, value}
+            }
+        }
+    }else{
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                set_lineno(frame, lineno)
+                if(obj.ix <= self.stop){
+                    return {done: true, value: null}
+                }
+                var value = obj.ix
+                obj.ix += self.step
+                return {done: false, value}
+            }
+        }
+    }
+}
+
 function range_eq(self, other){
     if($B.$isinstance(other, range)){
         var len = range.mp_length(self)

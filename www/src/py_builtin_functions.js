@@ -1160,7 +1160,6 @@ $B.$iter = function(obj, sentinel){
         console.log('iter', obj)
     }
     if(sentinel === undefined){
-
         var klass = $B.get_class(obj)
         var iter_func = $B.search_slot(klass, 'tp_iter', $B.NULL)
         if(test){
@@ -1331,6 +1330,7 @@ _b_.map.tp_methods = ["__reduce__", "__setstate__"]
 
 $B.set_func_names(map, "builtins")
 
+$B.nb_min = 0
 
 function $extreme(args, op){ // used by min() and max()
     var $op_name = op == '__lt__' ? 'min' : 'max'
@@ -1371,7 +1371,7 @@ function $extreme(args, op){ // used by min() and max()
         $B.RAISE(_b_.TypeError, $op_name + " expected 1 arguments, got 0")
     }else if(nb_args == 1){
         // Only one positional argument : it must be an iterable
-        var $iter = $B.make_js_iterator(args[0]),
+        var $iter = $B.make_js_iterator_no_trace(args[0]),
             res = null,
             x_value,
             extr_value
@@ -1389,6 +1389,7 @@ function $extreme(args, op){ // used by min() and max()
         }
         if(res === null){
             if(has_default){
+        $B.nb_min++
                 return default_value
             }else{
                 $B.RAISE(_b_.ValueError, $op_name +

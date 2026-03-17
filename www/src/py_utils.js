@@ -889,7 +889,16 @@ $B.unpack_mapping = function(func, obj){
     return items
 }
 
-
+$B.make_js_iterator_no_trace = function(iterator){
+    if(Array.isArray(iterator)){
+        if(iterator.ob_type){
+            return iterator[Symbol.iterator]()
+        }else{
+            return iterator.map($B.jsobj2pyobj)[Symbol.iterator]()
+        }
+    }
+    return $B.make_js_iterator(iterator, $B.NULL)
+}
 
 $B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
@@ -904,43 +913,18 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             frame = $B.frame_obj.frame
             lineno = frame.$lineno
         }
-    }
-    if(iterator.ob_type === _b_.range){
-        var obj = {ix: iterator.start}
-        if(iterator.step > 0){
-            return {
-                [Symbol.iterator](){
-                    return this
-                },
-                next(){
-                    set_lineno(frame, lineno)
-                    if(obj.ix >= iterator.stop){
-                        return {done: true, value: null}
-                    }
-                    var value = obj.ix
-                    obj.ix += iterator.step
-                    return {done: false, value}
-                }
-            }
-        }else{
-            return {
-                [Symbol.iterator](){
-                    return this
-                },
-                next(){
-                    set_lineno(frame, lineno)
-                    if(obj.ix <= iterator.stop){
-                        return {done: true, value: null}
-                    }
-                    var value = obj.ix
-                    obj.ix += iterator.step
-                    return {done: false, value}
-                }
-            }
-        }
+    }else if(frame === $B.NULL){
+        // passed when the loop doesn't set lineno, for instance in
+        // min(iterator)
+        set_lineno = () => null
     }
 
-    var it = _b_.iter(iterator)
+    var cls = $B.get_class(iterator)
+    if(Object.hasOwn(cls, $B.FAST_ITER)){
+        return cls[$B.FAST_ITER](iterator, set_lineno, frame, lineno)
+    }
+
+    var it = $B.$iter(iterator)
     var test = false // $B.get_class(iterator) === $B.js_array //.tp_name == 'FlagBoundary'
     if(test){
         console.log('make js iterator', it)
@@ -1028,12 +1012,15 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     return t
 }
 
+$B.nb_set_lineno_type = 0
+
 $B.set_lineno = function(frame, lineno, type){
     frame.$lineno = lineno
     if(frame.$f_trace !== _b_.None){
         $B.trace_line()
     }
     if(type){
+        $B.nb_set_lineno_type++
         frame[type] = frame[type] || {}
         frame[type][lineno] = true
     }

@@ -334,11 +334,13 @@ $B.ajax_load_script = function(s){
                         $B.tasks.splice(0, 0, [$B.run_script, script, src, name,
                             url, true])
                     }
-                    loop()
                 }else if(this.status == 404){
-                    throw Error(url + " not found")
+                    var err = $B.EXC(_b_.ModuleNotFoundError, url)
+                    err.$suggestion = _b_.None
+                    $B.handle_error(err)
                 }
             }
+            loop()
         }
         req.send()
     }else{

@@ -671,8 +671,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-18 20:36:02.656915"
-__BRYTHON__.timestamp=1773862562656
+__BRYTHON__.compiled_date="2026-03-19 07:52:23.181294"
+__BRYTHON__.timestamp=1773903143181
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1334,8 +1334,10 @@ req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 if(s.is_ww){$B.webworkers[name]=script
 $B.file_cache[filename]=src
-$B.dispatch_load_event(script)}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
-loop()}else if(this.status==404){throw Error(url+" not found")}}}
+$B.dispatch_load_event(script)}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}}else if(this.status==404){var err=$B.EXC(_b_.ModuleNotFoundError,url)
+err.$suggestion=_b_.None
+$B.handle_error(err)}}
+loop()}
 req.send()}else{$B.RAISE(_b_.IOError,"can't load external script at "+
 script.url+" (Ajax calls not supported with protocol file:///)")}}
 function add_jsmodule(module,source){
@@ -2750,6 +2752,9 @@ return res}}}else{cls.$getattribute=$B.NULL}}
 function reset_getattribute(cls){
 $B.make_getattr(cls)
 for(var kls of cls.tp_subclasses){reset_getattribute(kls)}}
+$B.make_fast_iter=function(cls){if(cls.tp_base &&
+cls.tp_base[$B.FAST_ITER]&&
+$B.str_dict_get(cls.dict,'__iter__',$B.NULL)===$B.NULL){cls[$B.FAST_ITER]=cls.tp_base[$B.FAST_ITER]}}
 function set_slots(cl_dict,class_obj){let slots=$B.str_dict_get(cl_dict,'__slots__',$B.NULL)
 if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){var member={name:key,type:$B.TYPES.OBJECT,attr:'slot_value_'+key,flags:0}
 var md={ob_type:$B.member_descriptor,d_type:class_obj,d_name:key,d_member:member}
@@ -2861,6 +2866,7 @@ var res=type_new_get_bases(ctx,class_obj)
 if(test){console.log('after get bases',ctx.name,'base',ctx.base)}
 class_obj.tp_base=ctx.base
 class_obj.tp_bases=ctx.bases
+$B.make_fast_iter(class_obj)
 if(test){console.log('result of type_new_get_bases',res)}
 if(res < 0){assert(PyErr_Occurred());
 return NULL;}

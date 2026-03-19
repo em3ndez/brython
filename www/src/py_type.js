@@ -1017,6 +1017,14 @@ function reset_getattribute(cls){
     }
 }
 
+$B.make_fast_iter = function(cls){
+    if(cls.tp_base &&
+            cls.tp_base[$B.FAST_ITER] &&
+            $B.str_dict_get(cls.dict, '__iter__', $B.NULL) === $B.NULL){
+        cls[$B.FAST_ITER] = cls.tp_base[$B.FAST_ITER]
+    }
+}
+
 function set_slots(cl_dict, class_obj){
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
@@ -1331,6 +1339,9 @@ _b_.type.tp_new = function(cls, args, kw){
     }
     class_obj.tp_base = ctx.base
     class_obj.tp_bases = ctx.bases
+
+    $B.make_fast_iter(class_obj)
+
     if(test){
         console.log('result of type_new_get_bases', res)
     }

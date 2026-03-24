@@ -709,9 +709,6 @@ _b_.BaseException.tp_getset = [
 
 $B.set_func_names(_b_.BaseException, 'builtins')
 
-// Brython-specific
-//make_builtin_exception("JavascriptError", _b_.Exception)
-
 _b_.StopIteration.tp_init = function(self){
     var $ = $B.args("StopIteration", 1, {self: null}, ['self'], arguments, {},
                 'args', 'kw')

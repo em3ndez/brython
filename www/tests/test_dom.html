@@ -135,7 +135,11 @@ assert len(document.select("#test")) == 1
 s = html.SVG(height=100)
 assert isinstance(s.height, int)
 
+# issue 2673
+assert bool(span)
+
 print("all tests ok")
+
 
 </script>
 </body>

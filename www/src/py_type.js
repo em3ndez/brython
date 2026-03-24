@@ -903,7 +903,10 @@ $B.builtin_slot = function(cls, slot){
     return $B.NULL
 }
 
+$B.time_type_getattribute = 0
+
 $B.type_getattribute = function(klass, attr){
+    var t0 = globalThis.performance.now()
     var test = false // attr == 'spam'
     if(test){
         console.log('type getattribute', attr, klass)
@@ -911,7 +914,9 @@ $B.type_getattribute = function(klass, attr){
     }
     var meta = $B.get_class(klass)
     if(meta === _b_.type){
-        return meta.tp_getattro(klass, attr)
+        var res = meta.tp_getattro(klass, attr)
+        $B.time_type_getattribute += globalThis.performance.now() - t0
+        return res
     }
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
     if(getattro !== $B.NULL){

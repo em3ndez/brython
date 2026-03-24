@@ -671,8 +671,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-19 07:52:23.181294"
-__BRYTHON__.timestamp=1773903143181
+__BRYTHON__.compiled_date="2026-03-24 08:30:50.738127"
+__BRYTHON__.timestamp=1774337450737
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2719,10 +2719,14 @@ return v}}}
 return _default}
 $B.builtin_slot=function(cls,slot){for(var kls of cls.tp_mro){if(Object.hasOwn(kls,slot)){return kls[slot]}}
 return $B.NULL}
-$B.type_getattribute=function(klass,attr){var test=false 
+$B.time_type_getattribute=0
+$B.type_getattribute=function(klass,attr){var t0=globalThis.performance.now()
+var test=false 
 if(test){console.log('type getattribute',attr,klass)}
 var meta=$B.get_class(klass)
-if(meta===_b_.type){return meta.tp_getattro(klass,attr)}
+if(meta===_b_.type){var res=meta.tp_getattro(klass,attr)
+$B.time_type_getattribute+=globalThis.performance.now()-t0
+return res}
 var getattro=$B.search_slot(meta,'tp_getattro',$B.NULL)
 if(getattro !==$B.NULL){if(test){console.log('getattro',getattro)}
 var res=getattro(klass,attr,$B.NULL)
@@ -4743,6 +4747,7 @@ $B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catc
 throw err}}
 $B.time_getattr=0
 $B.time_obj_getattr=0
+$B.time_builtin_getattr=0
 $B.$getattr=function(obj,attr,_default){
 var t0=globalThis.performance.now()
 var test=false 
@@ -4757,14 +4762,16 @@ return obj.$method_cache[attr][0]}
 var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var klass=$B.get_class(obj)
+if(klass===_b_.str){if(Object.hasOwn($B.ZTR.prototype,attr)){return $B.ZTR.prototype[attr].bind(obj)}}
 var is_class=klass.tp_mro.includes(_b_.type)
 if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
-if(! is_class){if(klass.tp_funcs && Object.hasOwn(klass.tp_funcs,attr)){var func=klass.tp_funcs[attr]
+if(! is_class){if(klass.tp_funcs && Object.hasOwn(klass.tp_funcs,attr)){var t0=globalThis.performance.now()
+var func=klass.tp_funcs[attr]
 var res=$B.NULL
 switch(func.ob_type){case $B.builtin_method:
-res=klass.tp_funcs[attr].bind(obj,obj)
-break}
-if(res !==$B.NULL){res.ob_type=func.ob_type
+res=function(){return klass.tp_funcs[attr](obj,...arguments)}
+res.ob_type=func.ob_type
+$B.time_builtin_getattr+=globalThis.performance.now()-t0
 return res}}
 var res=$B.object_getattribute(obj,klass,attr)}else{var res=$B.type_getattribute(obj,attr)}
 if(res===$B.NULL){if(_default !==undefined){return _default}
@@ -9053,10 +9060,14 @@ break}}
 return $B.$list(res.map($B.String))}else{if(! $B.$isinstance(sep,_b_.str)){$B.RAISE(_b_.TypeError,'must be str or None, not '+
 $B.class_name(sep))}
 sep=to_string(sep)
-let res=[],s="",seplen=sep.length
-if(maxsplit==0){return $B.$list([$.self])}else if(maxsplit==-1){res=_self.split(sep)
+let res,s="",seplen=sep.length
+if(maxsplit==0){res=$B.$list([$.self])
+$B.time_string_split+=window.performance.now()-t0
+return res}else if(maxsplit==-1){res=_self.split(sep)
 if(_self.surrogates){res=res.map($B.String)}
+$B.time_string_split+=window.performance.now()-t0
 return $B.$list(res)}
+res=[]
 while(pos < _self.length){var ix=_self.indexOf(sep,pos)
 if(ix==-1){res.push(_self.substr(pos))
 break}
@@ -9189,7 +9200,8 @@ Template.tp_getset=["values"]
 $B.set_func_names(Template,'builtins')
 $B.ZTR=function(s){this.s=s}
 $B.ZTR.prototype.split=function(sep){var t0=globalThis.performance.now()
-var $=$B.args("split",2,{sep:null,maxsplit:null},["sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string(this.s)
+var $=$B.args("split",2,{sep:null,maxsplit:null},["sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep
+var pos=0,_self=to_string(this)
 if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
 if(sep==""){$B.RAISE(_b_.ValueError,"empty separator")}
 if(sep===_b_.None){let res=[]
@@ -9209,15 +9221,20 @@ $B.class_name(sep))}
 sep=to_string(sep)
 let res=[],s="",seplen=sep.length
 if(maxsplit==0){return $B.$list([$.self])}
-while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
-pos+=seplen
-if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))}
-s=""}else{s+=_self.charAt(pos)
-pos++}}
+if(maxsplit==-1){return $B.$list(_self.split(sep))}
+res=[]
+while(pos < _self.length){var ix=_self.indexOf(sep,pos)
+if(ix==-1){res.push(_self.substr(pos))
+break}
+res.push(_self.substring(pos,ix))
+pos=ix+seplen
+if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))
+break}}
 if(_self.surrogates){res=res.map($B.String)}
 return $B.$list(res)}}
 _b_.ztr=$B.make_builtin_class('ztr')
-_b_.ztr.tp_new=function(cls,args,kw){return new $B.ZTR(args[0])}})(__BRYTHON__);
+_b_.ztr.tp_new=function(cls,args,kw){return new $B.ZTR(args[0])}
+_b_.ztr.tp_getattro=function(self,attr){return $B.ZTR.prototype[attr].bind(self)}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var int=_b_.int
@@ -12386,6 +12403,7 @@ self.attributes &&
 typeof self.attributes.getNamedItem=="function"){let attr=self.attributes.getNamedItem(key)
 if(attr !==null){return attr.value}
 $B.RAISE(_b_.KeyError,key)}}}
+DOMNode.nb_bool=function(self){return true}
 DOMNode.tp_iter=function(self){
 var items=[]
 if(self.length !==undefined && typeof self.item=="function"){for(let i=0,len=self.length;i < len;i++){items.push(DOMNode.$factory(self.item(i)))}}else if(self.childNodes !==undefined){for(let child of self.childNodes){items.push(DOMNode.$factory(child))}}

@@ -781,6 +781,10 @@ DOMNode.mp_subscript = function(self, key){
     }
 }
 
+DOMNode.nb_bool = function(self){
+    return true
+}
+
 DOMNode.tp_iter = function(self){
     // iteration on a Node
     var items = []

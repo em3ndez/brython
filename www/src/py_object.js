@@ -379,7 +379,6 @@ _b_.object.tp_getattro = function(self, attr){
         return $B.method.tp_new($B.method, [in_mro, self])
     }
 
-
     var getter = $B.NULL
     if(in_mro !== $B.NULL){
         var in_mro_class = $B.get_class(in_mro)

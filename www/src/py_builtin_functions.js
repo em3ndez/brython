@@ -1968,7 +1968,7 @@ _b_.super.tp_getattro = function(self, attr){
             f, 'type(f)', $B.get_class(f))
     }
     var f_cls = $B.get_class(f)
-    var getter = $B.search_slot(f_cls, 'tp_descr_get', $B.NULL)
+    var getter = f_cls.tp_descr_get
     var res
     if(getter !== $B.NULL){
         if($test){

@@ -882,7 +882,7 @@ $B.search_slot = function(cls, slot, _default){
             if(v !== $B.NULL){
                 if(typeof v !== 'function'){
                     var v_type = $B.get_class(v)
-                    var getter = $B.search_slot(v_type, 'tp_descr_get', $B.NULL)
+                    var getter = v_type.tp_descr_get
                     if(getter !== $B.NULL){
                         v = getter(v, cls)
                     }
@@ -1259,7 +1259,7 @@ _b_.type.tp_getattro = function(obj, name){
             if(in_mro_class.tp_descr_set !== $B.NULL){
                 if(test){
                     console.log('data descriptor', name)
-                    console.log('__set__', $B.search_slot(in_mro_class, 'tp_descr_set', $B.NULL))
+                    console.log('__set__', in_mro_class.tp_descr_set)
                 }
                 try{
                     var res = getter(in_mro, obj, klass)     // data descriptor
@@ -1286,7 +1286,7 @@ _b_.type.tp_getattro = function(obj, name){
             console.log('attribute', attribute)
             console.log('class', $B.get_class(attribute))
         }
-        var local_get = $B.search_slot($B.get_class(attribute), 'tp_descr_get', $B.NULL)
+        var local_get = $B.get_class(attribute).tp_descr_get
         if(test){
             console.log('local_get', $B.get_class(local_get))
         }
@@ -1542,8 +1542,7 @@ type_funcs.__annotate___get = function(self){
         annotate = $B.str_dict_get(self.dict, '__annotate_func__', $B.NULL)
     }
     if(annotate !== $B.NULL){
-        var get = $B.search_slot($B.get_class(annotate), 'tp_descr_get',
-            $B.NULL)
+        var get = $B.get_class(annotate).tp_descr_get
         if(get !== $B.NULL){
             annotate = get(annotate, $B.NULL, self)
         }

@@ -1862,7 +1862,7 @@ $B.rich_comp = function(op, x, y){
     if(in_mro === undefined){
         $B.RAISE(_b_TypeError, `no attribute ${op}`)
     }
-    var getter = $B.search_slot($B.get_class(in_mro), 'tp_descr_get')
+    var getter = $B.get_class(in_mro).tp_descr_get
     if(getter){
         var comp_func = getter(in_mro, x)
         res = $B.$call(comp_func, y)

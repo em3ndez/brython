@@ -671,8 +671,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-25 11:02:22.736456"
-__BRYTHON__.timestamp=1774432942736
+__BRYTHON__.compiled_date="2026-03-25 11:42:43.708319"
+__BRYTHON__.timestamp=1774435363708
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2035,7 +2035,7 @@ res=$B.$call(y_rev_func,y,x)
 if(res !==_b_.NotImplemented){return res}}}
 var in_mro=$B.search_in_mro($B.get_class(x),op)
 if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
-var getter=$B.search_slot($B.get_class(in_mro),'tp_descr_get')
+var getter=$B.get_class(in_mro).tp_descr_get
 if(getter){var comp_func=getter(in_mro,x)
 res=$B.$call(comp_func,y)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_slot($B.get_class(in_mro),'tp_call')
 if(call_in_mro){res=call_in_mro(in_mro,x,y)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{try{res=in_mro(x,y)}catch(err){console.log('error, in_mro',in_mro,'x',x,'y',y)
@@ -2145,9 +2145,9 @@ $B.get_class(in_mro)===$B.function &&
 ((! self.dict)||$B.str_dict_get(self.dict,attr,$B.NULL)===$B.NULL)){return $B.method.tp_new($B.method,[in_mro,self])}
 var getter=$B.NULL
 if(in_mro !==$B.NULL){var in_mro_class=$B.get_class(in_mro)
-var getter=$B.search_slot(in_mro_class,'tp_descr_get',$B.NULL)
+var getter=in_mro_class.tp_descr_get
 if(test){console.log('getter',getter)}
-if(getter !==$B.NULL){var is_data_descr=$B.search_slot(in_mro_class,'tp_descr_set',$B.NULL)!==$B.NULL
+if(getter !==$B.NULL){var is_data_descr=in_mro_class.tp_descr_set !==$B.NULL
 if(is_data_descr){if(test){console.log('data descriptor')
 console.log('call getter with',in_mro,self,klass)}
 var res=getter(in_mro,self,klass)
@@ -2298,7 +2298,7 @@ var getter=$B.NULL
 if(in_mro !==$B.NULL){var in_mro_class=$B.get_class(in_mro)
 var getter=in_mro_class.tp_descr_get
 if(test){console.log('getter',getter)}
-if(getter !==$B.NULL){var is_data_descr=$B.search_slot(in_mro_class,'tp_descr_set',$B.NULL)!==$B.NULL
+if(getter !==$B.NULL){var is_data_descr=in_mro_class.tp_descr_set !==$B.NULL
 if(is_data_descr){if(test){console.log('data descriptor')
 console.log('call getter with',in_mro,self,klass)}
 var res=getter(in_mro,self,klass)
@@ -2713,7 +2713,7 @@ if(cls.tp_mro===undefined){console.log('no mro',cls)}
 for(var klass of cls.tp_mro){if(klass.hasOwnProperty(slot)){return klass[slot]}
 if(dunder){var v=$B.str_dict_get(klass.dict,dunder,$B.NULL)
 if(v !==$B.NULL){if(typeof v !=='function'){var v_type=$B.get_class(v)
-var getter=$B.search_slot(v_type,'tp_descr_get',$B.NULL)
+var getter=v_type.tp_descr_get
 if(getter !==$B.NULL){v=getter(v,cls)}}
 return v}}}
 return _default}
@@ -2844,7 +2844,7 @@ if(test){console.log('in_mro class',in_mro_class)}
 var getter=in_mro_class.tp_descr_get
 if(test){console.log('getter',getter)}
 if(getter !==$B.NULL){if(in_mro_class.tp_descr_set !==$B.NULL){if(test){console.log('data descriptor',name)
-console.log('__set__',$B.search_slot(in_mro_class,'tp_descr_set',$B.NULL))}
+console.log('__set__',in_mro_class.tp_descr_set)}
 try{var res=getter(in_mro,obj,klass)
 if(test){console.log('result of getter',res)}
 return res}catch(err){$B.RAISE_IF_NOT(err,_b_.AttributeError)}}else{if(test){console.log('non-data descriptor',name)}}}}
@@ -2852,7 +2852,7 @@ if(test){console.log('search attribute',name,'in mro',obj)}
 var attribute=$B.search_in_mro(obj,name,$B.NULL)
 if(attribute !==$B.NULL){if(test){console.log('attribute',attribute)
 console.log('class',$B.get_class(attribute))}
-var local_get=$B.search_slot($B.get_class(attribute),'tp_descr_get',$B.NULL)
+var local_get=$B.get_class(attribute).tp_descr_get
 if(test){console.log('local_get',$B.get_class(local_get))}
 if(local_get !==$B.NULL){if(typeof local_get !=='function'){console.log('not a function',local_get,'NULL',$B.NULL)}
 if($B.get_class(local_get)===$B.JSFunction){var res=local_get(attribute,$B.NULL,obj)}else{var res=local_get(attribute,_b_.None,obj)}
@@ -2943,7 +2943,7 @@ type_funcs.__annotate___get=function(self){if(!(self.tp_flags & TPFLAGS.HEAPTYPE
 )}
 var annotate=$B.str_dict_get(self.dict,'__annotate__',$B.NULL)
 if(annotate===$B.NULL){annotate=$B.str_dict_get(self.dict,'__annotate_func__',$B.NULL)}
-if(annotate !==$B.NULL){var get=$B.search_slot($B.get_class(annotate),'tp_descr_get',$B.NULL)
+if(annotate !==$B.NULL){var get=$B.get_class(annotate).tp_descr_get
 if(get !==$B.NULL){annotate=get(annotate,$B.NULL,self)}}else{annotate=_b_.None;
 $B.str_dict_set(self.dict,'__annotate_func__',annotate)}
 return annotate}
@@ -5180,7 +5180,7 @@ if($test){console.log("no attr",attr,self,"mro",mro)}
 return _b_.object.tp_getattro(self,attr)}
 if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],'\nf',f,'type(f)',$B.get_class(f))}
 var f_cls=$B.get_class(f)
-var getter=$B.search_slot(f_cls,'tp_descr_get',$B.NULL)
+var getter=f_cls.tp_descr_get
 var res
 if(getter !==$B.NULL){if($test){console.log('call getter',getter)
 console.log('args',self.obj,self.obj_type)}

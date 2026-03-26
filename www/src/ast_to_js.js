@@ -117,10 +117,10 @@ function make_id(){
 
 function fast_id(obj){
     // faster than calling _b_.id
-    if(obj.$id !== undefined){
-        return obj.$id
+    if(obj[$B.ID] !== undefined){
+        return obj[$B.ID]
     }
-    return obj.$id = make_id()
+    return obj[$B.ID] = make_id()
 }
 
 function copy_position(target, origin){
@@ -3121,7 +3121,7 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
         name = 'lambda_' + $B.lambda_magic + '_' + id
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
-    f.$id = fast_id(this) // FunctionDef accesses symtable through id
+    f[$B.ID] = fast_id(this) // FunctionDef accesses symtable through id
     f.$is_lambda = true
     indent()
     var js = f.to_js(scopes),

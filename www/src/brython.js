@@ -213,6 +213,7 @@ $B.method_to_op={}
 for(var category in $B.op2method){for(var op in $B.op2method[category]){var method=`__${$B.op2method[category][op]}__`
 $B.method_to_op[method]=op}}
 $B.OB_TYPE=Symbol('OB_TYPE')
+$B.ID=Symbol('ID')
 $B.FAST_ITER=Symbol('FAST_ITER')
 $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r",92:"\\\\",160:"\\xa0"}
 $B.$py_next_hash=Math.pow(2,53)-1
@@ -672,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-26 09:11:29.845761"
-__BRYTHON__.timestamp=1774512689845
+__BRYTHON__.compiled_date="2026-03-26 11:23:16.916725"
+__BRYTHON__.timestamp=1774520596916
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4859,7 +4860,7 @@ help.__repr__=help.__str__=function(){return "Type help() for interactive help, 
 _b_.hex=function(obj){check_nb_args_no_kw('hex',1,arguments)
 return bin_hex_oct(16,obj)}
 _b_.id=function(obj){check_nb_args_no_kw('id',1,arguments)
-if(obj.$id !==undefined){return obj.$id}else if($B.$isinstance(obj,[_b_.str,_b_.int,_b_.float])){return $B.$call($B.$getattr(_b_.str.$factory(obj),'__hash__'))}else{return obj.$id=$B.UUID()}}
+if(obj[$B.ID]!==undefined){return obj[$B.ID]}else if($B.$isinstance(obj,[_b_.str,_b_.int,_b_.float])){return $B.$call($B.$getattr(_b_.str.$factory(obj),'__hash__'))}else{return obj[$B.ID]=$B.UUID()}}
 _b_.__import__=function(){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
@@ -14575,8 +14576,8 @@ var uuid=Math.floor(Math.random()*1000000)
 function make_id(){uuid+=1
 return uuid}
 function fast_id(obj){
-if(obj.$id !==undefined){return obj.$id}
-return obj.$id=make_id()}
+if(obj[$B.ID]!==undefined){return obj[$B.ID]}
+return obj[$B.ID]=make_id()}
 function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
@@ -15878,7 +15879,7 @@ $B.ast.Lambda.prototype.to_js=function(scopes){
 var id=make_id(),name='lambda_'+$B.lambda_magic+'_'+id
 var f=new $B.ast.FunctionDef(name,this.args,this.body,[])
 f.lineno=this.lineno
-f.$id=fast_id(this)
+f[$B.ID]=fast_id(this)
 f.$is_lambda=true
 indent()
 var js=f.to_js(scopes),lambda_ref=reference(scopes,last_scope(scopes),name)
@@ -16582,8 +16583,8 @@ this.stack=[]
 this.blocks=new Map()
 this.cur=NULL;
 this.private=NULL;}
-function id(obj){if(obj.$id !==undefined){return obj.$id}
-return obj.$id=$B.UUID()}
+function id(obj){if(obj[$B.ID]!==undefined){return obj[$B.ID]}
+return obj[$B.ID]=$B.UUID()}
 function ste_new(st,name,block,key,lineno,col_offset,end_lineno,end_col_offset){var ste
 ste={table:st,id:id(key),
 name:name,directives:NULL,type:block,nested:0,free:0,varargs:0,varkeywords:0,opt_lineno:0,opt_col_offset:0,lineno:lineno,col_offset:col_offset,end_lineno:end_lineno,end_col_offset:end_col_offset}
@@ -17276,7 +17277,9 @@ return 1}
 visitor.type_param=function(st,tp){switch(tp.constructor){case $B.ast.TypeVar:
 if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0);}
 if(! visitor.type_param_bound_or_default(st,tp.bound,tp.name,tp)){VISIT_QUIT(st,0)}
-if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,{$id:$B.UUID()})){VISIT_QUIT(st,0)}
+var _id={}
+_id[$B.ID]=$B.UUID()
+if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,_id)){VISIT_QUIT(st,0)}
 break;
 case $B.ast.TypeVarTuple:
 if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}

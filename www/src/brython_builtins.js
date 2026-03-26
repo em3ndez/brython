@@ -640,6 +640,7 @@ for(var category in $B.op2method){
 
 // Symbols
 $B.OB_TYPE = Symbol('OB_TYPE') // object type
+$B.ID = Symbol('ID') // used for built-in id()
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js

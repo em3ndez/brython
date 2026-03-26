@@ -121,10 +121,10 @@ function Symtable(){
 }
 
 function id(obj){
-    if(obj.$id !== undefined){
-        return obj.$id
+    if(obj[$B.ID] !== undefined){
+        return obj[$B.ID]
     }
-    return obj.$id = $B.UUID()
+    return obj[$B.ID] = $B.UUID()
 }
 
 function ste_new(st, name, block,
@@ -1729,8 +1729,10 @@ visitor.type_param = function(st, tp){
                 tp.name, tp)){
             VISIT_QUIT(st, 0)
         }
+        var _id = {}
+        _id[$B.ID] = $B.UUID()
         if(! visitor.type_param_bound_or_default(st, tp.default_value,
-                tp.name, {$id: $B.UUID()})){
+                tp.name, _id)){
             VISIT_QUIT(st, 0)
         }
         break;

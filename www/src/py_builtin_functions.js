@@ -981,12 +981,12 @@ _b_.hex = function(obj){
 
 _b_.id = function(obj){
    check_nb_args_no_kw('id', 1, arguments)
-   if(obj.$id !== undefined){
-       return obj.$id
+   if(obj[$B.ID] !== undefined){
+       return obj[$B.ID]
    }else if($B.$isinstance(obj, [_b_.str, _b_.int, _b_.float])){
        return $B.$call($B.$getattr(_b_.str.$factory(obj), '__hash__'))
    }else{
-       return obj.$id = $B.UUID()
+       return obj[$B.ID] = $B.UUID()
    }
 }
 

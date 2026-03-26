@@ -10,26 +10,31 @@ and because Map is much slower than regular Javascript objects.
 
 A Python dictionary is implemented as a Javascript objects with these
 attributes:
-. $all_str: indicates if all the keys are strings. Common use case, optimized
 . $strings: a JS object mapping string keys to values, used for string keys
-. $version: an integer with an initial value of 0, incremented at each
+. VERSION: an integer with an initial value of 0, incremented at each
   insertion
-. _keys: list of the keys
-. _values: list of the values
-. _hashes: list of the key hashes
-. table: a JS object with keys = hash of entries, value = list of indices in
-  _keys and _values
+. KEYS: list of the keys
+. VALUES: list of the values
+. HASHES: list of the key hashes
+. TABLE: a JS object with keys = hash of entries, value = list of indices in
+  KEYS and VALUES
 
 Lookup by keys:
 - if the key is a string, use $strings[key]
 - otherwise:
     - compute hash(key)
-    - if dict.table[hash] exists, it is a list of indices
-    - for each index, if dict._keys[index] == key, return dict._values[index]
+    - if dict[TABLE][hash] exists, it is a list of indices
+    - for each index, if dict[KEYS][index] == key, return dict[VALUES][index]
 
 */
 
 var _b_ = $B.builtins
+
+const VERSION = Symbol('VERSION')
+const KEYS = Symbol('KEYS')
+const VALUES = Symbol('VALUES')
+const HASHES = Symbol('HASHES')
+const TABLE = Symbol('TABLE')
 
 $B.dict_proxy = function(dict){
     // Given a dictionary dict, returns an object obj such that obj.x = y is
@@ -54,13 +59,11 @@ $B.dict_proxy = function(dict){
 }
 
 $B.assign_dict = function(pyobj, jsobj){
-    // assign the keys / values in jsonj to the pyobj dict
+    // assign the keys / values in jsobj to the pyobj dict
     if(! Object.hasOwn(pyobj, 'dict')){
         pyobj.dict = $B.empty_dict()
-        pyobj.dict.$strings = jsobj
-    }else{
-        Object.assign(pyobj.dict.$strings, jsobj)
     }
+    Object.assign(pyobj.dict.$strings, jsobj)
 }
 
 function PyDictViewSet_Check(op){
@@ -133,7 +136,7 @@ function all_contained_in(self, other){
             break
         }
     }
-    return ok;
+    return ok
 }
 
 function dictview_len(self){
@@ -317,7 +320,7 @@ $B.str_dict_length = function(d){
 }
 
 $B.hasOnlyStringKeys = function(d){
-    return d.$all_str
+    return ! d[KEYS]
 }
 
 $B.dict2kwarg = function(d){
@@ -351,7 +354,7 @@ dict.$to_obj = function(d){
 
 dict.$set_like = function(self){
     // return true if all values are hashable
-    for(var v of self._values){
+    for(var v of self[VALUES]){
         if(v === undefined){
             continue
         }else if(typeof v == 'string' ||
@@ -368,7 +371,7 @@ dict.$set_like = function(self){
 }
 
 dict.$iter_items = function*(d){
-    if(d.$all_str){
+    if(! d[KEYS]){
         for(let key in d.$strings){
             if(key != '$dict_strings'){
                 yield {key, value: d.$strings[key]}
@@ -376,16 +379,16 @@ dict.$iter_items = function*(d){
         }
         return
     }
-    var version = d.$version
-    for(var i = 0, len = d._keys.length; i < len; i++){
-        if(d._keys[i] !== undefined){
-            yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
-            if(d.$version !== version){
+    var version = d[VERSION]
+    for(var i = 0, len = d[KEYS].length; i < len; i++){
+        if(d[KEYS][i] !== undefined){
+            yield {key: d[KEYS][i], value: d[VALUES][i], hash: d[HASHES][i]}
+            if(d[VERSION] !== version){
                 $B.RAISE(_b_.RuntimeError, 'changed in iteration')
             }
         }
     }
-    if(d.$version !== version){
+    if(d[VERSION] !== version){
         $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
@@ -393,10 +396,10 @@ dict.$iter_items = function*(d){
 
 var $copy_dict = function(left, right){
     // left and right are dicts
-    right.$version = right.$version || 0
-    var right_version = right.$version
-    if(right.$all_str){
-        if(left.$all_str){
+    right[VERSION] = right[VERSION] || 0
+    var right_version = right[VERSION]
+    if(! right[KEYS]){
+        if(! left[KEYS]){
             for(let key in right.$strings){
                 left.$strings[key] = right.$strings[key]
             }
@@ -408,7 +411,7 @@ var $copy_dict = function(left, right){
     }else{
         for(var entry of dict.$iter_items(right)){
             dict.$setitem(left, entry.key, entry.value, entry.hash)
-            if(right.$version != right_version){
+            if(right[VERSION] != right_version){
                 $B.RAISE(_b_.RuntimeError, "dict mutated during update")
             }
         }
@@ -417,22 +420,22 @@ var $copy_dict = function(left, right){
 
 dict.$lookup_by_key = function(d, key, hash){
     hash = hash === undefined ? _b_.hash(key) : hash
-    var indices = d.table[hash],
+    var indices = d[TABLE][hash],
         index
     if(indices !== undefined){
         for(var i = 0, len = indices.length; i < len; i++){
             index = indices[i]
-            if(d._keys[index] === undefined){
-                d.table[hash].splice(i, 1)
-                if(d.table[hash].length == 0){
-                    delete d.table[hash]
+            if(d[KEYS][index] === undefined){
+                d[TABLE][hash].splice(i, 1)
+                if(d[TABLE][hash].length == 0){
+                    delete d[TABLE][hash]
                     return {found: false, hash}
                 }
                 continue
             }
-            if($B.is_or_equals(d._keys[index], key)){
+            if($B.is_or_equals(d[KEYS][index], key)){
                 return {found: true,
-                        key: d._keys[index], value: d._values[index],
+                        key: d[KEYS][index], value: d[VALUES][index],
                         hash, rank: i, index}
             }
         }
@@ -441,7 +444,7 @@ dict.$lookup_by_key = function(d, key, hash){
 }
 
 dict.$contains = function(self, key){
-    if(self.$all_str){
+    if(! self[KEYS]){
         if(typeof key == 'string'){
             return self.$strings.hasOwnProperty(key)
         }
@@ -459,7 +462,7 @@ dict.$delitem  = function(self, key){
     if(self[$B.JSOBJ]){
         delete self[$B.JSOBJ][key]
     }
-    if(self.$all_str){
+    if(! self[KEYS]){
         if(typeof key == 'string'){
             if(self.$strings.hasOwnProperty(key)){
                 dict.$delete_string(self, key)
@@ -475,14 +478,14 @@ dict.$delitem  = function(self, key){
 
     var lookup = dict.$lookup_by_key(self, key)
     if(lookup.found){
-        self.table[lookup.hash].splice(lookup.rank, 1)
-        if(self.table[lookup.hash].length == 0){
-            delete self.table[lookup.hash]
+        self[TABLE][lookup.hash].splice(lookup.rank, 1)
+        if(self[TABLE][lookup.hash].length == 0){
+            delete self[TABLE][lookup.hash]
         }
-        delete self._values[lookup.index]
-        delete self._keys[lookup.index]
-        delete self._hashes[lookup.index]
-        self.$version++
+        delete self[VALUES][lookup.index]
+        delete self[KEYS][lookup.index]
+        delete self[HASHES][lookup.index]
+        self[VERSION]++
         return _b_.None
     }
     $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
@@ -503,7 +506,7 @@ dict.$eq = function(self, other){
         return _b_.NotImplemented
     }
 
-    if(self.$all_str && other.$all_str){
+    if(! self[KEYS] && ! other[KEYS]){
         if(dict.mp_length(self) !== dict.mp_length(other)){
             return false
         }
@@ -518,12 +521,12 @@ dict.$eq = function(self, other){
         return true
     }
 
-    if(self.$all_str){
+    if(! self[KEYS]){
         let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
         return dict.$eq(d, other)
     }
-    if(other.$all_str){
+    if(! other[KEYS]){
         let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
         return dict.$eq(self, d)
@@ -533,16 +536,16 @@ dict.$eq = function(self, other){
         return false
     }
 
-    for(var hash in self.table){
+    for(var hash in self[TABLE]){
         var self_pairs = []
-        for(let index of self.table[hash]){
-            self_pairs.push([self._keys[index], self._values[index]])
+        for(let index of self[TABLE][hash]){
+            self_pairs.push([self[KEYS][index], self[VALUES][index]])
         }
         // Get all (key, value) pairs in other that have the same hash
         var other_pairs = []
-        if(other.table[hash] !== undefined){
-            for(let index of other.table[hash]){
-                other_pairs.push([other._keys[index], other._values[index]])
+        if(other[TABLE][hash] !== undefined){
+            for(let index of other[TABLE][hash]){
+                other_pairs.push([other[KEYS][index], other[VALUES][index]])
             }
         }
 
@@ -568,10 +571,10 @@ dict.$eq = function(self, other){
 
 dict.$contains_string = function(self, key){
     // Test if string "key" is in a dict where all keys are string
-    if(self.$all_str){
+    if(! self[KEYS]){
         return self.$strings.hasOwnProperty(key)
     }
-    if(self.table && self.table[_b_.hash(key)] !== undefined){
+    if(self[TABLE] && self[TABLE][_b_.hash(key)] !== undefined){
         return true
     }
     return false
@@ -579,15 +582,15 @@ dict.$contains_string = function(self, key){
 
 dict.$delete_string = function(self, key){
     // Used for dicts where all keys are strings
-    if(self.$all_str){
+    if(! self[KEYS]){
         var ix = self.$strings[key]
         if(ix !== undefined){
             delete self.$strings[key]
         }
     }
 
-    if(self.table){
-        delete self.table[_b_.hash(key)]
+    if(self[TABLE]){
+        delete self[TABLE][_b_.hash(key)]
     }
 }
 
@@ -595,13 +598,13 @@ dict.$missing = {}
 
 dict.$get_string = function(self, key, _default){
     // Used for dicts where all keys are strings
-    if(self.$all_str && self.$strings.hasOwnProperty(key)){
+    if(! self[KEYS] && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
     }
-    if(self.table && dict.mp_length(self)){
-        var indices = self.table[_b_.hash(key)]
+    if(self[TABLE] && dict.mp_length(self)){
+        var indices = self[TABLE][_b_.hash(key)]
         if(indices !== undefined){
-            return self._values[indices[0]]
+            return self[VALUES][indices[0]]
         }
     }
     return _default ?? _b_.dict.$missing
@@ -609,13 +612,13 @@ dict.$get_string = function(self, key, _default){
 
 dict.$getitem_string = function(self, key){
     // Used for dicts where all keys are strings
-    if(self.$all_str && self.$strings.hasOwnProperty(key)){
+    if(! self[KEYS] && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
     }
-    if(self.table){
-        var indices = self.table[_b_.hash(key)]
+    if(self[TABLE]){
+        var indices = self[TABLE][_b_.hash(key)]
         if(indices !== undefined){
-            return self._values[indices[0]]
+            return self[VALUES][indices[0]]
         }
     }
     $B.RAISE(_b_.KeyError, key)
@@ -624,33 +627,32 @@ dict.$getitem_string = function(self, key){
 dict.$keys_string = function(self){
     // return the list of keys in a dict where are keys are strings
     var res = []
-    if(self.$all_str){
+    if(! self[TABLE]){
         return Object.keys(self.$strings)
-    }
-    if(self.table){
-        res = res.concat(self._keys.filter((x) => x !== undefined))
+    }else{
+        res = res.concat(self[KEYS].filter((x) => x !== undefined))
     }
     return res
 }
 
 dict.$setitem_string = function(self, key, value){
     // Used for dicts where all keys are strings
-    if(self.$all_str){
+    if(! self[TABLE]){
         self.$strings[key] = value
         return _b_.None
     }else{
         var h = _b_.hash(key),
-            indices = self.table[h]
+            indices = self[TABLE][h]
         if(indices !== undefined){
-            self._values[indices[0]] = value
+            self[VALUES][indices[0]] = value
             return _b_.None
         }
     }
-    var index = self._keys.length
+    var index = self[KEYS].length
     self.$strings[key] = index
-    self._keys.push(key)
-    self._values.push(value)
-    self.$version++
+    self[KEYS].push(key)
+    self[VALUES].push(value)
+    self[VERSION]++
     return _b_.None
 }
 
@@ -662,7 +664,7 @@ dict.$getitem = function(self, key, ignore_missing){
         }
         $B.RAISE(_b_.KeyError, key)
     }
-    if(self.$all_str){
+    if(! self[TABLE]){
         if(typeof key == 'string'){
             if(self.$strings.hasOwnProperty(key)){
                 return self.$strings[key]
@@ -748,26 +750,26 @@ function add_iterable(d, js_iterable){
 }
 
 dict.$iter_items_reversed = function*(d){
-    var version = d.$version
-    if(d.$all_str){
+    var version = d[VERSION]
+    if(! d[TABLE]){
         for(var item of Object.entries(d.$strings).reverse()){
             yield $B.fast_tuple(item)
-            if(d.$version !== version){
+            if(d[VERSION] !== version){
                 $B.RAISE(_b_.RuntimeError, 'changed in iteration')
             }
         }
     }else{
-        for(var i = d._keys.length - 1; i >= 0; i--){
-            var key = d._keys[i]
+        for(var i = d[KEYS].length - 1; i >= 0; i--){
+            var key = d[KEYS][i]
             if(key !== undefined){
-                yield $B.fast_tuple([key, d._values[i]])
-                if(d.$version !== version){
+                yield $B.fast_tuple([key, d[VALUES][i]])
+                if(d[VERSION] !== version){
                     $B.RAISE(_b_.RuntimeError, 'changed in iteration')
                 }
             }
         }
     }
-    if(d.$version !== version){
+    if(d[VERSION] !== version){
         $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
@@ -828,13 +830,11 @@ function make_reverse_iterator(name, iter_func){
 
 function convert_all_str(d){
     // convert dict with only str keys to regular dict
-    d.$all_str = false
-
     // add addtional fields
-    d.table = Object.create(null)
-    d._keys = []
-    d._values = []
-    d._hashes = []
+    d[TABLE] = Object.create(null)
+    d[KEYS] = []
+    d[VALUES] = []
+    d[HASHES] = []
 
     for(var key in d.$strings){
         dict.$setitem(d, key, d.$strings[key])
@@ -856,7 +856,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         // non-string keys)
         self.$strings[key] = value
     }
-    if(self.$all_str){
+    if(! self[TABLE]){
         if(typeof key == 'string'){
             var int = parseInt(key)
             if(isNaN(int) || int >= 0){
@@ -879,31 +879,31 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     var hash = $hash !== undefined ? $hash : $B.$hash(key)
     var index
 
-    if(self.table[hash] === undefined){
-        index = self._keys.length
-        self.table[hash] = [index]
+    if(self[TABLE][hash] === undefined){
+        index = self[KEYS].length
+        self[TABLE][hash] = [index]
     }else{
         if(! from_setdefault){
             // If $setitem was called from setdefault, it's no use trying
             // another lookup
             var lookup = dict.$lookup_by_key(self, key, hash)
             if(lookup.found){
-                self._values[lookup.index] = value
+                self[VALUES][lookup.index] = value
                 return _b_.None
             }
         }
-        index = self._keys.length
-        if(self.table[hash] === undefined){
-            // dict.$lookup_by_key might have removed self.table[hash]
-            self.table[hash] = [index]
+        index = self[KEYS].length
+        if(self[TABLE][hash] === undefined){
+            // dict.$lookup_by_key might have removed self[TABLE][hash]
+            self[TABLE][hash] = [index]
         }else{
-            self.table[hash].push(index)
+            self[TABLE][hash].push(index)
         }
     }
-    self._keys.push(key)
-    self._values.push(value)
-    self._hashes.push(hash)
-    self.$version++
+    self[KEYS].push(key)
+    self[VALUES].push(value)
+    self[HASHES].push(hash)
+    self[VERSION]++
     return _b_.None
 }
 
@@ -1109,19 +1109,15 @@ _b_.dict.mp_ass_subscript = function(self){
 }
 
 _b_.dict.mp_length = function(self){
-    var _count = 0
-
-    if(self.$all_str){
-        return Object.keys(self.$strings).length
-    }
-
-    for(var d of self._keys){
-        if(d !== undefined){
-            _count++
+    var count = Object.keys(self.$strings).length
+    if(self[KEYS]){
+        for(var d of self[KEYS]){
+            if(d !== undefined){
+                count++
+            }
         }
     }
-
-    return _count
+    return count
 }
 
 _b_.dict.mp_subscript = function(self){
@@ -1145,7 +1141,7 @@ _b_.dict.tp_new = function(cls, args, kw){
         $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
     }
     var instance = $B.empty_dict()
-    instance.ob_type = cls
+    instance[$B.OB_TYPE] = cls
     if(cls !== dict){
         instance.dict = $B.empty_dict()
     }
@@ -1173,15 +1169,14 @@ dict_funcs.clear = function(self){
         null, null),
         self = $.self
 
-    if(! self.all_str){
-        delete self.table
-        delete self._hashes
-        delete self._keys
-        delete self._values
+    if(self[TABLE]){
+        delete self[TABLE]
+        delete self[HASHES]
+        delete self[KEYS]
+        delete self[VALUES]
     }
-    self.$all_str = true
     self.$strings = {}
-    self.$version++
+    self[VERSION]++
     return _b_.None
 }
 
@@ -1285,22 +1280,22 @@ dict_funcs.popitem = function(self){
     if(dict.mp_length(self) == 0){
         $B.RAISE(_b_.KeyError, "'popitem(): dictionary is empty'")
     }
-    if(self.$all_str){
+    if(! self[TABLE]){
         for(var key in self.$strings){
             // go to last key
         }
         let res = $B.fast_tuple([key, self.$strings[key]])
         delete self.$strings[key]
-        self.$version++
+        self[VERSION]++
         return res
     }
-    var index = self._keys.length - 1
+    var index = self[KEYS].length - 1
     while(index >= 0){
-        if(self._keys[index] !== undefined){
-            let res = $B.fast_tuple([self._keys[index], self._values[index]])
-            delete self._keys[index]
-            delete self._values[index]
-            self.$version++
+        if(self[KEYS][index] !== undefined){
+            let res = $B.fast_tuple([self[KEYS][index], self[VALUES][index]])
+            delete self[KEYS][index]
+            delete self[VALUES][index]
+            self[VERSION]++
             return res
         }
         index--
@@ -1315,7 +1310,7 @@ dict_funcs.setdefault = function(self){
         _default = $._default
     _default = _default === undefined ? _b_.None : _default
 
-    if(self.$all_str){
+    if(! self[TABLE]){
         if(typeof key === 'string'){
             if(! self.$strings.hasOwnProperty(key)){
                 self.$strings[key] = _default
@@ -1773,12 +1768,12 @@ $B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
 /* dict_reverseitemiterator end */
 
 $B.empty_dict = function(){
-    return {
-        ob_type: dict,
-        $strings: {},
-        $version: 0,
-        $all_str: true
+    var res = {
+        $strings: {}
     }
+    res[$B.OB_TYPE] = dict
+    res[VERSION] = 0
+    return res
 }
 
 dict.$from_js = function(jsobj){
@@ -1801,7 +1796,7 @@ mappingproxy.$factory = function(obj){
     }
     res.ob_type = mappingproxy
     res.mapping = obj
-    res.$version = 0
+    res[VERSION] = 0
     return res
 }
 

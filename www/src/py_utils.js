@@ -785,8 +785,8 @@ $B.get_class = function(obj){
     if(obj.ob_type){
         return obj.ob_type
     }
-    if(obj.constructor === $B.ZTR){
-        return _b_.ztr
+    if(obj[$B.OB_TYPE]){
+        return obj[$B.OB_TYPE]
     }
 
     var klass

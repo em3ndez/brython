@@ -638,8 +638,9 @@ for(var category in $B.op2method){
     }
 }
 
-// Symbol for fast iteration
-$B.FAST_ITER = Symbol('FAST_ITER')
+// Symbols
+$B.OB_TYPE = Symbol('OB_TYPE') // object type
+$B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {

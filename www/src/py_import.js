@@ -30,7 +30,7 @@ Module.$factory = function(name, doc, $package){
 }
 
 $B.module_getattr = function(module, attr){
-    return $B.str_dict_get(module.dict, attr, $B.NULL)
+    return $B.get_from_dict(module, attr, $B.NULL)
 }
 
 $B.module_setattr = function(module, attr, value){
@@ -66,7 +66,7 @@ $B.module.tp_getattro = function(self, attr){
         return res
     }
     // search with __getattr__ if defined in the module
-    var getattr = $B.str_dict_get(self.dict, '__getattr__', $B.NULL)
+    var getattr = $B.get_from_dict(self, '__getattr__', $B.NULL)
     if(getattr !== $B.NULL){
         return $B.$call(getattr, attr)
     }
@@ -288,9 +288,9 @@ $B.addToImported = function(name, modobj){
             $B.add_function_infos(modobj, attr, name)
         }else if($B.$isinstance(modobj[attr], _b_.type)){
             if(modobj[attr].dict){
-                if($B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) ===
+                if($B.get_from_dict(modobj[attr], '__module__', $B.NULL) ===
                         $B.NULL){
-                    $B.str_dict_set(modobj[attr].dict, '__module__', name)
+                    $B.set_to_dict(modobj[attr], '__module__', name)
                 }
             }
         }
@@ -448,7 +448,7 @@ ModuleSpec.$factory = function(fields){
         dict: $B.empty_dict()
     }
     for(var field in fields){
-        $B.str_dict_set(spec.dict, field, fields[field])
+        $B.set_to_dict(spec, field, fields[field])
     }
     if(! fields.hasOwnProperty('loader')){
         console.log('no loader', fields)

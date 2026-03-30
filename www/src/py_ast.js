@@ -69,20 +69,20 @@ $B.ast_js_to_py = function(obj){
         if(py_class === undefined){
             return obj
         }
-        for(var field of $B.str_dict_get(py_class.dict, '_fields', [])){
-            $B.str_dict_set(py_ast_obj.dict, field,
+        for(var field of $B.get_from_dict(py_class, '_fields', [])){
+            $B.set_to_dict(py_ast_obj, field,
                 $B.ast_js_to_py(obj[field]))
         }
         var _attributes = $B.fast_tuple([])
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
             if(obj[loc] !== undefined){
-                $B.str_dict_set(py_ast_obj.dict, loc, obj[loc])
+                $B.set_to_dict(py_ast_obj, loc, obj[loc])
                 _attributes.push(loc)
             }
         }
-        $B.str_dict_set(py_ast_obj.dict, '_attributes', _attributes)
-        $B.str_dict_set(py_ast_obj.dict, '__module__', 'ast')
+        $B.set_to_dict(py_ast_obj, '_attributes', _attributes)
+        $B.set_to_dict(py_ast_obj, '__module__', 'ast')
         return py_ast_obj
     }
 }
@@ -154,9 +154,9 @@ $B.create_python_ast_classes = function(){
                     }
                 }
             }
-            $B.str_dict_set(cls.dict, '__match_args__',
+            $B.set_to_dict(cls, '__match_args__',
                 $B.fast_tuple(Object.keys(slots)))
-            $B.str_dict_set(cls.dict, '__module__', 'ast')
+            $B.set_to_dict(cls, '__module__', 'ast')
 
             cls.$factory = function(){
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
@@ -169,21 +169,21 @@ $B.create_python_ast_classes = function(){
                 for(let key in $){
                     if(key == 'kw'){
                         for(let item of _b_.dict.$iter_items($.kw)){
-                            $B.str_dict_set(res.dict, item.key, item.value)
+                            $B.set_to_dict(res, item.key, item.value)
                         }
                     }else{
-                        $B.str_dict_set(res.dict, key, $[key])
+                        $B.set_to_dict(res, key, $[key])
                     }
                 }
                 if(klass == "Constant"){
-                    $B.str_dict_set(res.dict, 'value',
+                    $B.set_to_dict(res, 'value',
                         $B.AST.$convert($.value))
                 }
                 return res
             }
 
             if(_fields){
-                $B.str_dict_set(cls.dict, '_fields', _fields)
+                $B.set_to_dict(cls, '_fields', _fields)
             }
 
             cls.tp_new = function(cls, args, kw){
@@ -202,7 +202,7 @@ $B.create_python_ast_classes = function(){
                 for(let i=0, len=raw_fields.length; i < len; i++){
                     var raw_field = raw_fields[i]
                     if(raw_field.endsWith('?')){
-                        $B.str_dict_set(cls.dict, _fields[i], _b_.None)
+                        $B.set_to_dict(cls, _fields[i], _b_.None)
                     }
                 }
             }

@@ -32,7 +32,7 @@ $B.builtin_object_getattro = function(self, klass, attr){
 
     if(in_mro !== $B.NULL &&
             $B.get_class(in_mro) === $B.function &&
-            ((! self.dict) || $B.str_dict_get(self.dict, attr, $B.NULL) === $B.NULL)){
+            ((! self.dict) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)){
         return $B.method.tp_new($B.method, [in_mro, self])
     }
 
@@ -294,7 +294,7 @@ _b_.object.tp_setattro = function(self, attr, value){
             return setter(in_mro, self, value)
         }
     }
-    var slots = $B.str_dict_get(klass.dict, '__slots__', $B.NULL)
+    var slots = $B.get_from_dict(klass, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
         if(_b_.tuple.sq_contains(slots, attr)){
             self.slot_values[attr] = value
@@ -375,7 +375,7 @@ _b_.object.tp_getattro = function(self, attr){
 
     if(in_mro !== $B.NULL &&
             $B.get_class(in_mro) === $B.function &&
-            ((! self.dict) || $B.str_dict_get(self.dict, attr, $B.NULL) === $B.NULL)){
+            ((! self.dict) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)){
         return $B.method.tp_new($B.method, [in_mro, self])
     }
 
@@ -496,7 +496,7 @@ _b_.object.tp_new = function(cls, args, kw){
         ob_type: cls
     }
     if(cls !== object &&
-            $B.str_dict_get(cls.dict, '__slots__', $B.NULL) === $B.NULL){
+            $B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL){
         res.dict = $B.empty_dict()
     }
     return res

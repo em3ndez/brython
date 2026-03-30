@@ -101,13 +101,13 @@ hash.$factory = function(alg, obj) {
         if(obj !== undefined){
             _hash.update(bytes2WordArray(obj))
         }
-        $B.str_dict_set(res.dict, 'hash', _hash)
+        $B.set_to_dict(res, 'hash', _hash)
         break
       default:
         $B.RAISE_ATTRIBUTE_ERROR('Invalid hash algorithm: ' + alg, obj, alg)
     }
-    $B.str_dict_set(res.dict, 'digest_size', _hash._hash.sigBytes)
-    $B.str_dict_set(res.dict, 'block_size', block_size[alg])
+    $B.set_to_dict(res, 'digest_size', _hash._hash.sigBytes)
+    $B.set_to_dict(res, 'block_size', block_size[alg])
     return res
 }
 
@@ -120,15 +120,15 @@ hash.tp_new = function(cls, args, kw){
 var hash_funcs = hash.tp_funcs = {}
 
 hash_funcs.update = function(self, msg){
-    $B.str_dict_get(self.dict, 'hash').update(bytes2WordArray(msg))
+    $B.get_from_dict(self, 'hash').update(bytes2WordArray(msg))
 }
 
 hash_funcs.copy = function(self){
-    return $B.str_dict_get(self.dict, 'hash').clone()
+    return $B.get_from_dict(self, 'hash').clone()
 }
 
 hash_funcs.digest = function(self){
-    var hash_value = $B.str_dict_get(self.dict, 'hash')
+    var hash_value = $B.get_from_dict(self, 'hash')
     var obj = hash_value.clone().finalize().toString(),
         res = []
     for(var i = 0; i < obj.length; i += 2){
@@ -138,7 +138,7 @@ hash_funcs.digest = function(self){
 }
 
 hash_funcs.hexdigest = function(self) {
-    return $B.str_dict_get(self.dict, 'hash').clone().finalize().toString()
+    return $B.get_from_dict(self, 'hash').clone().finalize().toString()
 }
 
 

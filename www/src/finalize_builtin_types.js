@@ -33,7 +33,7 @@ function wrap(dunder, nb_args){
         if(func !== _b_.None){
             func.ml = {ml_name: dunder}
         }
-        $B.str_dict_set(cls.dict, dunder, $B.wrapper_descriptor.$factory(
+        $B.set_to_dict(cls, dunder, $B.wrapper_descriptor.$factory(
             cls,
             dunder,
             func
@@ -44,12 +44,12 @@ function wrap(dunder, nb_args){
 function wrap_with_reflected(dunder, rdunder){
     return function(cls, attr){
         var func = cls[attr]
-        $B.str_dict_set(cls.dict, dunder, $B.wrapper_descriptor.$factory(
+        $B.set_to_dict(cls, dunder, $B.wrapper_descriptor.$factory(
             cls,
             dunder,
             func
         ))
-        $B.str_dict_set(cls.dict, rdunder, $B.wrapper_descriptor.$factory(
+        $B.set_to_dict(cls, rdunder, $B.wrapper_descriptor.$factory(
             cls,
             rdunder,
             (self, other) => func(other, self)
@@ -60,12 +60,12 @@ function wrap_with_reflected(dunder, rdunder){
 function wrap_with_same_reflected(dunder, rdunder){
     return function(cls, attr){
         var func = cls[attr]
-        $B.str_dict_set(cls.dict, dunder, $B.wrapper_descriptor.$factory(
+        $B.set_to_dict(cls, dunder, $B.wrapper_descriptor.$factory(
             cls,
             dunder,
             func
         ))
-        $B.str_dict_set(cls.dict, rdunder, $B.wrapper_descriptor.$factory(
+        $B.set_to_dict(cls, rdunder, $B.wrapper_descriptor.$factory(
             cls,
             rdunder,
             func
@@ -141,9 +141,9 @@ Object.assign($B.wrapper_methods,
 )
 
 function make_doc(cls){
-    var in_dict = $B.str_dict_get(cls.dict, '__doc__', $B.NULL)
+    var in_dict = $B.get_from_dict(cls, '__doc__', $B.NULL)
     if(in_dict === $B.NULL){
-        $B.str_dict_set(cls.dict, '__doc__', cls.tp_doc)
+        $B.set_to_dict(cls, '__doc__', cls.tp_doc)
     }
 }
 
@@ -156,7 +156,7 @@ function make_getattribute(cls){
         }
         return res
     }
-    $B.str_dict_set(cls.dict, '__getattribute__',
+    $B.set_to_dict(cls, '__getattribute__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__getattribute__',
@@ -181,7 +181,7 @@ function make_new(cls){
         }
     )
     cls.tp_new.$is_slot = true
-    $B.str_dict_set(cls.dict, '__new__', new_func)
+    $B.set_to_dict(cls, '__new__', new_func)
 }
 
 function make_next(cls){
@@ -200,17 +200,17 @@ function make_next(cls){
         next_func
     )
 
-    $B.str_dict_set(cls.dict, '__next__', next_func)
+    $B.set_to_dict(cls, '__next__', next_func)
 }
 
 function make_set_del(cls){
     var set_func = cls.tp_descr_set
-    $B.str_dict_set(cls.dict, '__set__', $B.wrapper_descriptor.$factory(
+    $B.set_to_dict(cls, '__set__', $B.wrapper_descriptor.$factory(
         cls,
         '__set__',
         set_func
     ))
-    $B.str_dict_set(cls.dict, '__delete__', $B.wrapper_descriptor.$factory(
+    $B.set_to_dict(cls, '__delete__', $B.wrapper_descriptor.$factory(
         cls,
         '__set__',
         (self, attr) => set_func(self, attr, $B.NULL)
@@ -219,14 +219,14 @@ function make_set_del(cls){
 
 function make_setitem_delitem(cls){
     var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
-    $B.str_dict_set(cls.dict, '__setitem__',
+    $B.set_to_dict(cls, '__setitem__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__setitem__',
             setitem
         )
     )
-    $B.str_dict_set(cls.dict, '__delitem__',
+    $B.set_to_dict(cls, '__delitem__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__delitem__',
@@ -237,14 +237,14 @@ function make_setitem_delitem(cls){
 
 function make_setattr_delattr(cls){
     var setattro = cls.tp_setattro
-    $B.str_dict_set(cls.dict, '__setattr__',
+    $B.set_to_dict(cls, '__setattr__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__setattr__',
             setattro
         )
     )
-    $B.str_dict_set(cls.dict, '__delattr__',
+    $B.set_to_dict(cls, '__delattr__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__delattr__',
@@ -263,7 +263,7 @@ function make_richcompare(cls){
                 return comp(self, other, _op)
             }
         })(op)
-        $B.str_dict_set(cls.dict, op,
+        $B.set_to_dict(cls, op,
             $B.wrapper_descriptor.$factory(
                 cls,
                 op,
@@ -283,8 +283,8 @@ $B.finalize_type = function(cls){
     var parts = cls.tp_name.split('.')
     var module = parts.length == 1 ? 'builtins' :
         parts.slice(0, parts.length - 1).join('.')
-    if($B.str_dict_get(cls.dict, '__module__', $B.NULL) === $B.NULL){
-        $B.str_dict_set(cls.dict, '__module__', module)
+    if($B.get_from_dict(cls, '__module__', $B.NULL) === $B.NULL){
+        $B.set_to_dict(cls, '__module__', module)
     }
 
     if(cls.tp_getset){
@@ -293,7 +293,7 @@ $B.finalize_type = function(cls){
                 cls.tp_funcs[descr + '_get'], // getter
                 cls.tp_funcs[descr + '_set'] // setter
             ]
-            $B.str_dict_set(cls.dict, descr,
+            $B.set_to_dict(cls, descr,
                 $B.getset_descriptor.$factory(cls, descr, getset))
         }
     }
@@ -305,19 +305,19 @@ $B.finalize_type = function(cls){
                 alert()
             }
             method.ob_type = $B.builtin_method
-            $B.str_dict_set(cls.dict, descr, {
+            $B.set_to_dict(cls, descr, {
                 ob_type: $B.method_descriptor,
                 method,
                 d_name: descr,
                 d_type: cls
             })
-            method.self = $B.str_dict_get(cls.dict, descr)
+            method.self = $B.get_from_dict(cls, descr)
         }
     }
     if(cls.tp_members){
         for(var descr of cls.tp_members){
             var [name, type, attr, flags] = descr
-            $B.str_dict_set(cls.dict, name,
+            $B.set_to_dict(cls, name,
                 {
                     ob_type: $B.member_descriptor,
                     d_member: {name, type, attr, flags},
@@ -329,7 +329,7 @@ $B.finalize_type = function(cls){
     }
     if(cls.classmethods){
         for(var descr of cls.classmethods){
-            $B.str_dict_set(cls.dict, descr, {
+            $B.set_to_dict(cls, descr, {
                 ob_type: $B.classmethod_descriptor,
                 d_name: descr,
                 d_type: cls,
@@ -339,7 +339,7 @@ $B.finalize_type = function(cls){
     }
     if(cls.staticmethods){
         for(var descr of cls.staticmethods){
-            $B.str_dict_set(cls.dict, descr,
+            $B.set_to_dict(cls, descr,
                 _b_.staticmethod.$factory(cls.tp_funcs[descr]))
         }
     }

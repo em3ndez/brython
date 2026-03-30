@@ -520,7 +520,7 @@ function jsclass2pyclass(js_class){
         js_class
     }
     cls.tp_mro = $B.make_mro(cls)
-    $B.str_dict_set(cls.dict, '__new__',
+    $B.set_to_dict(cls, '__new__',
         function(klass, ...args){
             return {
                 ob_type: klass,
@@ -528,17 +528,17 @@ function jsclass2pyclass(js_class){
             }
         }
     )
-    $B.str_dict_set(cls.dict, '__init__',
+    $B.set_to_dict(cls, '__init__',
         function(self, ...args){
             self.jsobj = new cls.js_class(...args)
         }
     )
-    $B.str_dict_set(cls.dict, '__getattr__',
+    $B.set_to_dict(cls, '__getattr__',
         function(self, attr){
             return jsobj2pyobj(self.jsobj[attr], self.jsobj)
         }
     )
-    $B.str_dict_set(cls.dict, '__setattr__',
+    $B.set_to_dict(cls, '__setattr__',
         function(self, attr, value){
             self.jsobj[attr] = pyobj2jsobj(value)
         }

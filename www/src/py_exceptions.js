@@ -667,11 +667,11 @@ BaseException_funcs.add_note = function(self, note){
         $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }
-    var notes = $B.str_dict_get(self.dict, '__notes__', $B.NULL)
+    var notes = $B.get_from_dict(self, '__notes__', $B.NULL)
     if(notes !== $B.NULL){
         notes.push(note)
     }else{
-        $B.str_dict_set(self.dict, '__notes__', $B.$list([note]))
+        $B.set_to_dict(self, '__notes__', $B.$list([note]))
     }
 }
 

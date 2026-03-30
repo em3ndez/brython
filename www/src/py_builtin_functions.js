@@ -726,7 +726,7 @@ $B.search_in_mro = function(klass, attr, _default){
             var dunder = $B.slot2dunder.hasOwnProperty(attr) ?
                 $B.slot2dunder[attr] : attr
             if(! mro[i].dict ||
-                    $B.str_dict_get(mro[i].dict, dunder, $B.NULL) === $B.NULL){
+                    $B.get_from_dict(mro[i], dunder, $B.NULL) === $B.NULL){
                 console.log('attr', attr, 'found in mro[i]', mro[i],
                     'but absent in dict')
                 console.log($B.frame_obj.frame.$lineno)
@@ -735,7 +735,7 @@ $B.search_in_mro = function(klass, attr, _default){
             //return mro[i][attr]
         }
         if(mro[i].dict){
-            var v = $B.str_dict_get(mro[i].dict, attr, $B.NULL)
+            var v = $B.get_from_dict(mro[i], attr, $B.NULL)
             if(v !== $B.NULL){
                 if(test){
                     console.log('found in dict of mro', i, v)
@@ -759,7 +759,7 @@ $B.search_in_mro = function(klass, attr, _default){
 $B.search_in_dict = function(obj, attr, _default){
     if(obj.dict){
         try{
-            var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
+            var v = $B.get_from_dict(obj, attr, $B.NULL)
         }catch(err){
             console.log('error', obj, attr)
             throw err
@@ -830,7 +830,7 @@ $B.$getattr = function(obj, attr, _default){
 
     if(! is_class){
         if(klass.tp_funcs){
-            var func = $B.str_dict_get(klass.dict, attr, $B.NULL)
+            var func = $B.get_from_dict(klass, attr, $B.NULL)
             if(func !== $B.NULL){
                 var res = $B.NULL
                 if(test){

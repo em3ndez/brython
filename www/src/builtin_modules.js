@@ -936,9 +936,9 @@
                 lineno,
                 line
             if(category === _b_.SyntaxWarning){
-                filename = $B.str_dict_get(message.dict, 'filename'),
-                lineno = $B.str_dict_get(message.dict, 'lineno'),
-                line = $B.str_dict_get(message.dict, 'text', '')
+                filename = $B.get_from_dict(message, 'filename'),
+                lineno = $B.get_from_dict(message, 'lineno'),
+                line = $B.get_from_dict(message, 'text', '')
                 var src = $B.file_cache[file]
                 if(src){
                     var lines = src.split('\n'),

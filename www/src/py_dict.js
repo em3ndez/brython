@@ -449,7 +449,7 @@ dict.$contains = function(self, key){
             return self.$strings.hasOwnProperty(key)
         }
         var hash = $B.$getattr($B.get_class(key), '__hash__')
-        if(hash === $B.str_dict_get(_b_.object.dict, '__hash__')){
+        if(hash === $B.get_from_dict(_b_.object, '__hash__')){
             return false
         }
         convert_all_str(self)
@@ -671,7 +671,7 @@ dict.$getitem = function(self, key, ignore_missing){
             }
         }else{
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
-            if(hash_method !== $B.str_dict_get(_b_.object.dict, '__hash__')){
+            if(hash_method !== $B.get_from_dict(_b_.object, '__hash__')){
                 convert_all_str(self)
                 let lookup = dict.$lookup_by_key(self, key)
                 if(lookup.found){

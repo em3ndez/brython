@@ -1052,7 +1052,7 @@ $B.get_method_class = function(method, ns, qualname, refs){
 // warning
 $B.warn = function(klass, message, filename, token){
     var warning = $B.EXC(klass, message)
-    $B.str_dict_set(warning.dict, 'filename', filename)
+    $B.set_to_dict(warning, 'filename', filename)
     if(klass === _b_.SyntaxWarning){
         $B.assign_dict(warning,
             {

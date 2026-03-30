@@ -62,7 +62,7 @@ classmethod_funcs.__annotations___set = function(self){
 classmethod_funcs.__class_getitem__ = $B.$class_getitem
 
 classmethod_funcs.__isabstractmethod___get = function(self){
-    var res = $B.str_dict_get(self.cm_callable.dict, '__isabstractmethod__', $B.NULL)
+    var res = $B.get_from_dict(self.cm_callable, '__isabstractmethod__', $B.NULL)
     if(res === $B.NULL){
         return false
     }

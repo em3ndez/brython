@@ -142,7 +142,7 @@ function set_type_new(dict){
 
 function set_type_getattro(cls){
     // Set attribute tp_getattro for attribute resolution
-    var getattribute = $B.str_dict_get(cls.dict, '__getattribute__', $B.NULL)
+    var getattribute = $B.get_from_dict(cls, '__getattribute__', $B.NULL)
     var getattr = $B.search_in_mro(cls, '__getattr__', $B.NULL)
     if(getattribute === $B.NULL && getattr === $B.NULL){
         if(cls.tp_base === undefined){
@@ -625,8 +625,12 @@ $B.merge_class_dict = function(dict, klass){
     }
 }
 
-$B.set_class_attr = function(cls_dict, attr, value){
-    $B.str_dict_set(cls_dict, attr, value)
+$B.get_from_dict = function(cls, attr, _default){
+    return $B.str_dict_get(cls.dict, attr, _default)
+}
+
+$B.set_to_dict = function(cls, attr, value){
+    $B.str_dict_set(cls.dict, attr, value)
 }
 
 var NULL = {NULL:true}
@@ -660,7 +664,7 @@ $B.search_own_slot = function(cls, slot, _default){
         return cls[slot]
     }
     if(dunder){
-        var v = $B.str_dict_get(cls.dict, dunder, $B.NULL)
+        var v = $B.get_from_dict(cls, dunder, $B.NULL)
         if(v !== $B.NULL){
             if(v.ob_type.tp_descr_get){
                 v = v.ob_type.tp_descr_get(v, cls)
@@ -681,7 +685,7 @@ $B.search_slot = function(cls, slot, _default){
             return klass[slot]
         }
         if(dunder){
-            var v = $B.str_dict_get(klass.dict, dunder, $B.NULL)
+            var v = $B.get_from_dict(klass, dunder, $B.NULL)
             if(v !== $B.NULL){
                 if(typeof v !== 'function'){
                     var v_type = $B.get_class(v)
@@ -773,7 +777,7 @@ function type_mro(cls){
 
 function set_tp_slots(cls){
     for(var [slot, dunder] of Object.entries($B.slot2dunder)){
-        var method = $B.str_dict_get(cls.dict, dunder, $B.NULL)
+        var method = $B.get_from_dict(cls, dunder, $B.NULL)
         if(method !== $B.NULL){
             cls[slot] = method
         }else{
@@ -827,7 +831,7 @@ function reset_getattribute(cls){
 
 $B.make_descr_get = function(cls){
     cls.tp_descr_get = $B.NULL
-    var get = $B.str_dict_get(cls.dict, '__get__', $B.NULL)
+    var get = $B.get_from_dict(cls, '__get__', $B.NULL)
     if(get !== $B.NULL){
         cls.tp_descr_get = get
     }else if(cls.tp_base){
@@ -846,7 +850,7 @@ function reset_descr_get(cls){
 
 $B.make_descr_set = function(cls){
     cls.tp_descr_set = $B.NULL
-    var _set = $B.str_dict_get(cls.dict, '__set__', $B.NULL)
+    var _set = $B.get_from_dict(cls, '__set__', $B.NULL)
     if(_set !== $B.NULL){
         cls.tp_descr_set = _set
     }else if(cls.tp_base){
@@ -865,7 +869,7 @@ function reset_descr_set(cls){
 
 $B.make_iter = function(cls){
     cls.tp_iter = $B.NULL
-    var iter = $B.str_dict_get(cls.dict, '__iter__', $B.NULL)
+    var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
     if(iter !== $B.NULL){
         cls.tp_iter = iter
     }else if(cls.tp_base){
@@ -888,7 +892,7 @@ function reset_iter(cls){
 $B.make_fast_iter = function(cls){
     if(cls.tp_base &&
             cls.tp_base[$B.FAST_ITER] &&
-            $B.str_dict_get(cls.dict, '__iter__', $B.NULL) === $B.NULL){
+            $B.get_from_dict(cls, '__iter__', $B.NULL) === $B.NULL){
         cls[$B.FAST_ITER] = cls.tp_base[$B.FAST_ITER]
     }
 }
@@ -945,13 +949,13 @@ _b_.type.tp_setattro = function(kls, attr, value){
     }
     if( ! done){
         if(value === $B.NULL){
-            var current = $B.str_dict_get(kls.dict, attr, $B.NULL)
+            var current = $B.get_from_dict(kls, attr, $B.NULL)
             if(current === $B.NULL){
                 throw $B.attr_error(attr, kls)
             }
             _b_.dict.$delitem(kls.dict, attr)
         }else{
-            $B.str_dict_set(kls.dict, attr, value)
+            $B.set_to_dict(kls, attr, value)
         }
     }
     switch(attr){
@@ -1186,9 +1190,9 @@ _b_.type.tp_new = function(cls, args, kw){
 
     // Create the class dictionary
     var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
-    $B.set_class_attr(cl_dict, '__module__', module)
+    $B.str_dict_set(cl_dict, '__module__', module)
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
-    $B.set_class_attr(cl_dict, '__qualname__', qualname)
+    $B.str_dict_set(cl_dict, '__qualname__', qualname)
 
     var ctx = {
         metatype,
@@ -1210,7 +1214,7 @@ _b_.type.tp_new = function(cls, args, kw){
     }
     class_obj.tp_mro = $B.make_mro(class_obj)
     class_obj.tp_subclasses = []
-    
+
     $B.make_getattr(class_obj)
 
     set_type_new(cl_dict)
@@ -1247,7 +1251,7 @@ _b_.type.tp_new = function(cls, args, kw){
         }
         set_slots(cl_dict, class_obj)
 
-        $B.str_dict_set(class_obj.dict, '__dict__',
+        $B.set_to_dict(class_obj, '__dict__',
                 $B.getset_descriptor.$factory(
                 class_obj,
                 '__dict__',
@@ -1332,7 +1336,7 @@ var type_funcs = _b_.type.tp_funcs = {}
 
 type_funcs.__abstractmethods___get = function(cls){
     if(cls !== type) {
-        var res = $B.str_dict_get(cls.dict, '__abstractmethods__', $B.NULL)
+        var res = $B.get_from_dict(cls, '__abstractmethods__', $B.NULL)
         if(res !== $B.NULL){
             return res
         }
@@ -1368,9 +1372,9 @@ type_funcs.__annotate___get = function(self){
         )
     }
     // First try __annotate__, in case that's been set explicitly
-    var annotate = $B.str_dict_get(self.dict, '__annotate__', $B.NULL)
+    var annotate = $B.get_from_dict(self, '__annotate__', $B.NULL)
     if(annotate === $B.NULL){
-        annotate = $B.str_dict_get(self.dict, '__annotate_func__', $B.NULL)
+        annotate = $B.get_from_dict(self, '__annotate_func__', $B.NULL)
     }
     if(annotate !== $B.NULL){
         var get = $B.get_class(annotate).tp_descr_get
@@ -1379,7 +1383,7 @@ type_funcs.__annotate___get = function(self){
         }
     }else{
         annotate = _b_.None;
-        $B.str_dict_set(self.dict, '__annotate_func__', annotate)
+        $B.set_to_dict(self, '__annotate_func__', annotate)
     }
     return annotate
 }
@@ -1388,15 +1392,15 @@ type_funcs.__annotate___set = function(cls, value){
     if(value === $B.NULL){
         $B.RAISE(_b_.TypeError, 'cannot delete __annotate__ attribute')
     }
-    $B.str_dict_set(cls.dict, '__annotate__', value)
+    $B.set_to_dict(cls, '__annotate__', value)
 }
 
 type_funcs.__annotations___get = function(cls){
-    var annotations = $B.str_dict_get(cls.dict, '__annotations__', $B.NULL)
+    var annotations = $B.get_from_dict(cls, '__annotations__', $B.NULL)
     if(annotations !== $B.NULL){
         return annotations
     }
-    var ann_func = $B.str_dict_get(cls.dict, '__annotate_func__', $B.NULL)
+    var ann_func = $B.get_from_dict(cls, '__annotate_func__', $B.NULL)
     if(ann_func === $B.NULL || ann_func === _b_.None){
         return $B.empty_dict()
     }
@@ -1408,7 +1412,7 @@ type_funcs.__annotations___set = function(cls, value){
         value = $B.empty_dict()
         type.tp_funcs.__annotate___set(cls, _b_.None)
     }
-    $B.str_dict_set(cls.dict, '__annotations__', value)
+    $B.set_to_dict(cls, '__annotations__', value)
 }
 
 type_funcs.__bases___get = function(cls){
@@ -1451,11 +1455,11 @@ type_funcs.__doc___get = function(cls){
     if(! (cls.tp_flags & TPFLAGS.HEAPTYPE) && cls.tp_doc){
         return cls.tp_doc
     }
-    return $B.str_dict_get(cls.dict, '__doc__', _b_.None)
+    return $B.get_from_dict(cls, '__doc__', _b_.None)
 }
 
 type_funcs.__doc___set = function(cls, value){
-    $B.str_dict_set(cls.dict, '__doc__', value)
+    $B.set_to_dict(cls, '__doc__', value)
 }
 
 type_funcs.__instancecheck__ = function(cls, instance){
@@ -1471,7 +1475,7 @@ type_funcs.__instancecheck__ = function(cls, instance){
 
 type_funcs.__module___get = function(self){
     if(self.dict){
-        var module = $B.str_dict_get(self.dict, '__module__', $B.NULL)
+        var module = $B.get_from_dict(self, '__module__', $B.NULL)
         if(module !== $B.NULL){
             return module
         }
@@ -1480,7 +1484,7 @@ type_funcs.__module___get = function(self){
 }
 
 type_funcs.__module___set = function(self, value){
-    $B.str_dict_set(self.dict, '__module__', value)
+    $B.set_to_dict(self, '__module__', value)
 }
 
 type_funcs.__mro___get = function(self){
@@ -1504,7 +1508,7 @@ type_funcs.__prepare__ = function(cls){
 }
 
 type_funcs.__qualname___get = function(cls){
-    return $B.str_dict_get(cls.dict, '__qualname__', $B.get_name(cls))
+    return $B.get_from_dict(cls, '__qualname__', $B.get_name(cls))
 }
 
 type_funcs.__qualname___set = function(cls, value){
@@ -2237,7 +2241,7 @@ $B.UnionType.tp_repr = function(self){
     for(var item of self.args){
         if($B.is_type(item)){
             var s = $B.get_name(item)
-            if($B.str_dict_get(item.dict, '__module__') !== "builtins"){
+            if($B.get_from_dict(item, '__module__') !== "builtins"){
                 s = item.__module__ + '.' + s
             }
             t.push(s)
